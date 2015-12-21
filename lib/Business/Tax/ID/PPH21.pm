@@ -11,6 +11,25 @@ use Exporter::Rinci qw(import);
 
 our %SPEC;
 
+our %arg_tp_status = (
+    tp_status => {
+        summary => 'Taxypayer status',
+        schema => ['str*', in=>[
+            'TK/0', 'TK/1', 'TK/2', 'TK/3',
+            'K/0' , 'K/1',  'K/2',  'K/3',
+        ]],
+        req => 1,
+    },
+);
+
+our %arg_year = (
+    year => {
+        schema => ['int*', min=>1983],
+        req => 1,
+        pos => 0,
+    },
+);
+
 $SPEC{':package'} = {
     v => 1.1,
     summary => 'Routines to help calculating Indonesian income tax article 21 (PPh pasal 21)',
@@ -45,7 +64,8 @@ $SPEC{get_pph21_individual_tax_rates} = {
     description => <<'_',
 
 PPh 21 differentiates rates between individuals and statutory bodies (e.g.
-companies).
+companies). Both are progressive. This routine returns the tax rates for
+individuals.
 
 Keywords: tax brackets.
 
@@ -70,7 +90,7 @@ sub get_pph21_individual_tax_rates {
     my %args = @_;
     my $year = $args{year};
     if ($year >= 2009 && $year <= 2015) {
-        state $rate = [
+        state $res = [
             200, "OK",
             [
                 {                   max=> 50_000_000, rate=>0.05},
@@ -80,9 +100,9 @@ sub get_pph21_individual_tax_rates {
             ],
             {'table.fields' => [qw/xmin max rate/]},
         ];
-        return $rate;
+        return $res;
     } elsif ($year >= 2000 && $year <= 2008) {
-        state $rate = [
+        state $res = [
             200, "OK",
             [
                 {                   max=> 25_000_000, rate=>0.05},
@@ -93,7 +113,7 @@ sub get_pph21_individual_tax_rates {
             ],
             {'table.fields' => [qw/xmin max rate/]},
         ];
-        return $rate;
+        return $res;
     } else {
         return [412, "Year unknown or unsupported"];
     }
@@ -117,17 +137,56 @@ Kata kunci: PTKP, penghasilan tidak kena pajak.
 
 _
     args => {
-        year => {
-            schema => ['int*', min=>1983],
-            req => 1,
-            pos => 0,
-        },
+        %arg_year,
+        #%arg_tp_status,
     },
     examples => [
         {args=>{year=>2015}},
     ],
 };
 sub get_pph21_individual_nontaxable_incomes {
+    my %args = @_;
+
+    my $tp_status = $args{tp_status};
+    my $year = $args{year};
+
+    my $code_make = sub {
+        my ($base, $add) = @_;
+        return {
+            map {
+                ("TK/$_" => $base + $add*$_,
+                 "K/$_"  => $base + $add + $add*$_)
+            } 0..3
+        };
+    };
+
+    if ($year >= 2015 && $year <= 2015) {
+        state $res = [200, "OK", $code_make->( 36_000_000, 3_000_000)];
+        return $res;
+    } elsif ($year >= 2013 && $year <= 2014) {
+        state $res = [200, "OK", $code_make->( 24_300_000, 2_025_000)];
+        return $res;
+    } elsif ($year >= 2009 && $year <= 2012) {
+        state $res = [200, "OK", $code_make->( 15_840_000, 1_320_000)];
+        return $res;
+    } elsif ($year >= 2006 && $year <= 2008) {
+        state $res = [200, "OK", $code_make->( 13_200_000, 1_200_000)];
+        return $res;
+    } elsif ($year >= 2005 && $year <= 2005) {
+        state $res = [200, "OK", $code_make->( 12_000_000, 1_200_000)];
+        return $res;
+    } elsif ($year >= 2001 && $year <= 2004) {
+        state $res = [200, "OK", $code_make->(  2_880_000, 1_440_000)];
+        return $res;
+    } elsif ($year >= 1994 && $year <= 2000) {
+        state $res = [200, "OK", $code_make->(  1_728_000,   864_000)];
+        return $res;
+    } elsif ($year >= 1983 && $year <= 1994) {
+        state $res = [200, "OK", $code_make->(    960_000,   480_000)];
+        return $res;
+    } else {
+        return [412, "Year unknown or unsupported"];
+    }
 }
 
 1;
