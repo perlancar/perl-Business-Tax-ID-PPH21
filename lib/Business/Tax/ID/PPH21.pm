@@ -122,6 +122,17 @@ _
             req => 1,
             pos => 0,
         },
+        tp_status => {
+            summary => 'Taxpayer status',
+            description => <<'_',
+
+Taypayer status reflects his/her marital status and affect the amount of
+his/her non-taxable income.
+
+_
+            schema => ['str*', in=>['TK/0', 'TK/1', 'TK/2', 'TK/3',
+                                    'K/0', 'K/1', 'K/2', 'K/3']],
+        },
     },
     examples => [
         {args=>{year=>2015}},
