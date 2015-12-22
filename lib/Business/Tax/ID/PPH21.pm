@@ -144,7 +144,6 @@ Kata kunci: PTKP, penghasilan tidak kena pajak.
 _
     args => {
         %arg_year,
-        %arg_tp_status,
     },
     examples => [
         {args=>{year=>2015}},
