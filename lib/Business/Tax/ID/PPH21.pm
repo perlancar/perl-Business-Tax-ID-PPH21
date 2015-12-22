@@ -36,6 +36,14 @@ our %arg_year = (
     },
 );
 
+our %arg_net_income = (
+    net_income => {
+        summary => 'Yearly net income',
+        schema => ['float*', min=>0],
+        req => 1,
+    },
+);
+
 $SPEC{':package'} = {
     v => 1.1,
     summary => 'Routines to help calculating Indonesian income tax article 21 (PPh pasal 21)',
@@ -64,21 +72,21 @@ _
 
 };
 
-$SPEC{get_pph21_individual_tax_rates} = {
+$SPEC{get_pph21_op_rates} = {
     v => 1.1,
-    summary => 'Get PPh21 tax rates for individuals',
+    summary => 'Get tax rates for PPh21 for individuals ("OP", "orang pribadi")',
     description => <<'_',
 
-PPh 21 differentiates rates between individuals and statutory bodies (e.g.
-companies). Both are progressive. This routine returns the tax rates for
-individuals.
+PPh21 differentiates rates between individuals ("OP", "orang pribadi") and
+statutory bodies ("badan"). Both are progressive. This routine returns the tax
+rates for individuals.
 
-Keywords: tax brackets.
+Keywords: tax rates, tax brackets.
 
 _
     'description.alt.lang.id_ID' => <<'_',
 
-Kata kunci: tarif pajak.
+Kata kunci: tarif pajak, lapisan pajak.
 
 _
     args => {
@@ -92,7 +100,7 @@ _
         {args=>{year=>2015}},
     ],
 };
-sub get_pph21_individual_tax_rates {
+sub get_pph21_op_rates {
     my %args = @_;
     my $year = $args{year};
     if ($year >= 2009 && $year <= 2015) {
@@ -125,21 +133,21 @@ sub get_pph21_individual_tax_rates {
     }
 }
 
-# TODO: get_pph21_statbody_tax_rates
+# TODO: get_pph21_badan_rates
 
-$SPEC{get_pph21_individual_nontaxable_incomes} = {
+$SPEC{get_pph21_op_ptkp} = {
     v => 1.1,
-    summary => 'Get PPh21 individual non-taxable income amount (PTKP)',
+    summary => 'Get PPh21 non-taxable income amount ("PTKP") for individuals',
     description => <<'_',
 
 When calculating individual income tax, the net income is subtracted by this
-amount. This means that if a person has income below this amount, he/she does
-not need to pay income tax.
+amount first. This means that if a person has income below this amount, he/she
+does not need to pay income tax.
 
 _
     'description.alt.lang.id_ID' => <<'_',
 
-Kata kunci: PTKP, penghasilan tidak kena pajak.
+Kata kunci: penghasilan tidak kena pajak.
 
 _
     args => {
@@ -149,7 +157,7 @@ _
         {args=>{year=>2015}},
     ],
 };
-sub get_pph21_individual_nontaxable_incomes {
+sub get_pph21_op_ptkp {
     my %args = @_;
 
     my $tp_status = $args{tp_status};
@@ -192,6 +200,54 @@ sub get_pph21_individual_nontaxable_incomes {
     } else {
         return [412, "Year unknown or unsupported"];
     }
+}
+
+sub _min { $_[0] < $_[1] ? $_[0] : $_[1] }
+
+$SPEC{calc_pph21_op} = {
+    v => 1.1,
+    summary => 'Calculate PPh 21 for individuals ("OP", "orang pribadi")',
+    args => {
+        %arg_year,
+        %arg_tp_status,
+        %arg_net_income,
+    },
+};
+sub calc_pph21_op {
+    my %args = @_;
+
+    my $year       = $args{year};
+    my $tp_status  = $args{tp_status};
+    my $net_income = $args{net_income};
+
+    my $res;
+
+    $res = get_pph21_op_ptkp(year => $year);
+    return $res unless $res->[0] == 200;
+    my $ptkps = $res->[2];
+    my $ptkp = $ptkps->{$tp_status}
+        or die "BUG: Can't get PTKP for '$tp_status'";
+
+    my $pkp = $net_income - $ptkp;
+    return [200, "OK", 0] if $pkp <= 0;
+
+    $res = get_pph21_op_rates(year => $year);
+    return $res unless $res->[0] == 200;
+    my $brackets = $res->[2];
+
+    my $tax = 0;
+    for my $bracket (@$brackets) {
+        if (defined $bracket->{max}) {
+            $tax += (_min($pkp, $bracket->{max}) -
+                         ($bracket->{xmin} // 0)) * $bracket->{rate};
+            last if $pkp <= $bracket->{max};
+        } else {
+            $tax += ($pkp - $bracket->{xmin}) * $bracket->{rate};
+            last;
+        }
+    }
+
+    [200, "OK", $tax];
 }
 
 1;
