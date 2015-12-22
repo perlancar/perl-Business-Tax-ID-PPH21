@@ -212,6 +212,15 @@ $SPEC{calc_pph21_op} = {
         %arg_tp_status,
         %arg_net_income,
     },
+    examples => [
+        {
+            summary => 'Someone who earns below PTKP',
+            args => {year=>2015, tp_status=>'TK/0', net_income=>30_000_000},
+        },
+        {
+            args => {year=>2015, tp_status=>'K/2', net_income=>300_000_000},
+        },
+    ],
 };
 sub calc_pph21_op {
     my %args = @_;
