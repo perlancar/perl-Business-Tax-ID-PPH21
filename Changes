@@ -1,5 +1,16 @@
 Revision history for Business-Tax-ID-PPH21
 
+0.02    2015-12-23 (PERLANCAR)
+
+        - No functional changes.
+
+        - [build] Rebuild with updated Perinci::To::Doc (0.73) which can render
+          example results with hash keys sorted according to 'table.fields', if
+          any.
+
+        - [doc] Add some example for calc_pph21_op().
+
+
 0.01    2015-12-22 (PERLANCAR)
 
         - First release.
