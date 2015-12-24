@@ -16,7 +16,7 @@ our %arg_tp_status = (
         summary => 'Taxypayer status',
         description => <<'_',
 
-Taypayer status reflects his/her marital status and affect the amount of
+Taypayer status reflects his/her marital status and affects the amount of
 his/her non-taxable income.
 
 _
@@ -46,7 +46,7 @@ our %arg_net_income = (
 
 $SPEC{':package'} = {
     v => 1.1,
-    summary => 'Routines to help calculating Indonesian income tax article 21 (PPh pasal 21)',
+    summary => 'Routines to help calculate Indonesian income tax article 21 (PPh pasal 21)',
     description => <<'_',
 
 The law ("undang-undang") for income tax ("pajak penghasilan") in Indonesia is
