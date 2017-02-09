@@ -97,13 +97,13 @@ _
         },
     },
     examples => [
-        {args=>{year=>2015}},
+        {args=>{year=>2016}},
     ],
 };
 sub get_pph21_op_rates {
     my %args = @_;
     my $year = $args{year};
-    if ($year >= 2009 && $year <= 2015) {
+    if ($year >= 2009 && $year <= 2016) {
         state $res = [
             200, "OK",
             [
@@ -154,7 +154,7 @@ _
         %arg_year,
     },
     examples => [
-        {args=>{year=>2015}},
+        {args=>{year=>2016}},
     ],
 };
 sub get_pph21_op_ptkp {
@@ -173,7 +173,10 @@ sub get_pph21_op_ptkp {
         };
     };
 
-    if ($year >= 2015 && $year <= 2015) {
+    if ($year >= 2016 && $year <= 2016) { # UU PMK: 101/PMK.010/2016
+        state $res = [200, "OK", $code_make->( 54_000_000, 4_500_000)];
+        return $res;
+    } elsif ($year >= 2015 && $year <= 2015) {
         state $res = [200, "OK", $code_make->( 36_000_000, 3_000_000)];
         return $res;
     } elsif ($year >= 2013 && $year <= 2014) {
