@@ -11,6 +11,8 @@ use Exporter::Rinci qw(import);
 
 our %SPEC;
 
+my $latest_supported_year = 2016;
+
 our %arg_tp_status = (
     tp_status => {
         summary => 'Taxypayer status',
@@ -90,11 +92,7 @@ Kata kunci: tarif pajak, lapisan pajak.
 
 _
     args => {
-        year => {
-            schema => ['int*', min=>1983],
-            req => 1,
-            pos => 0,
-        },
+        %arg_year,
     },
     examples => [
         {args=>{year=>2016}},
@@ -103,7 +101,7 @@ _
 sub get_pph21_op_rates {
     my %args = @_;
     my $year = $args{year};
-    if ($year >= 2009 && $year <= 2016) {
+    if ($year >= 2009 && $year <= $latest_supported_year) {
         state $res = [
             200, "OK",
             [
@@ -129,7 +127,8 @@ sub get_pph21_op_rates {
         ];
         return $res;
     } else {
-        return [412, "Year unknown or unsupported"];
+        return [412, "Year unknown or unsupported (latest supported year is ".
+                    "$latest_supported_year)"];
     }
 }
 
@@ -201,7 +200,8 @@ sub get_pph21_op_ptkp {
         state $res = [200, "OK", $code_make->(    960_000,   480_000)];
         return $res;
     } else {
-        return [412, "Year unknown or unsupported"];
+        return [412, "Year unknown or unsupported (latest supported year is ".
+                    "$latest_supported_year)"];
     }
 }
 
