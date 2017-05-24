@@ -101,6 +101,12 @@ _
 sub get_pph21_op_rates {
     my %args = @_;
     my $year = $args{year};
+    my $resmeta = {
+        'table.fields' => [qw/xmin max rate/],
+        'table.field_formats' => [
+            undef, undef, ['percent', {sprintf=>'%3.0f%%'}]
+        ],
+    };
     if ($year >= 2009 && $year <= $latest_supported_year) {
         state $res = [
             200, "OK",
@@ -110,7 +116,7 @@ sub get_pph21_op_rates {
                 {xmin=>250_000_000, max=>500_000_000, rate=>0.25},
                 {xmin=>500_000_000,                   rate=>0.30},
             ],
-            {'table.fields' => [qw/xmin max rate/]},
+            $resmeta,
         ];
         return $res;
     } elsif ($year >= 2000 && $year <= 2008) {
@@ -123,7 +129,7 @@ sub get_pph21_op_rates {
                 {xmin=>100_000_000, max=>200_000_000, rate=>0.25},
                 {xmin=>200_000_000,                   rate=>0.35},
             ],
-            {'table.fields' => [qw/xmin max rate/]},
+            $resmeta,
         ];
         return $res;
     } else {
