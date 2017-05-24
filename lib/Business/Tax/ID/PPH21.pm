@@ -46,6 +46,14 @@ our %arg_net_income = (
     },
 );
 
+our %arg_pph21_op = (
+    pph21_op => {
+        summary => 'Amount of PPh 21 op paid',
+        schema => ['float*', min=>0],
+        req => 1,
+    },
+);
+
 $SPEC{':package'} = {
     v => 1.1,
     summary => 'Routines to help calculate Indonesian income tax article 21 (PPh pasal 21)',
@@ -266,6 +274,74 @@ sub calc_pph21_op {
     }
 
     [200, "OK", $tax];
+}
+
+$SPEC{calc_net_income_from_pph21_op} = {
+    v => 1.1,
+    summary => 'Given that someone pays a certain amount of PPh 21 op, '.
+        'calculate her yearly net income',
+    description => <<'_',
+
+If pph21_op is 0, will return the PTKP amount. Actually one can earn between
+zero and the full PTKP amount to pay zero PPh 21 op.
+
+_
+    args => {
+        %arg_year,
+        %arg_tp_status,
+        %arg_pph21_op,
+        monthly => {
+            summary => 'Instead of yearly, return monthly net income',
+            schema => ['bool*', is=>1],
+        },
+    },
+    examples => [
+        {
+            summary => "Someone who doesn't pay PPh 21 op earns at or below PTKP",
+            args => {year=>2016, tp_status=>'TK/0', pph21_op=>0},
+        },
+        {
+            args => {year=>2016, tp_status=>'K/2', pph21_op=>20_000_000},
+        },
+    ],
+};
+sub calc_net_income_from_pph21_op {
+    my %args = @_;
+
+    my $year      = $args{year};
+    my $tp_status = $args{tp_status};
+    my $pph21_op  = $args{pph21_op};
+
+    my $res;
+
+    $res = get_pph21_op_ptkp(year => $year);
+    return $res unless $res->[0] == 200;
+    my $ptkps = $res->[2];
+    my $ptkp = $ptkps->{$tp_status}
+        or die "BUG: Can't get PTKP for '$tp_status'";
+
+    $res = get_pph21_op_rates(year => $year);
+    return $res unless $res->[0] == 200;
+    my $brackets = $res->[2];
+
+    my $net_income = $ptkp;
+    for my $bracket (@$brackets) {
+        if (defined $bracket->{max}) {
+            my $range = $bracket->{max} - ($bracket->{xmin} // 0);
+            my $bracket_tax = $range * $bracket->{rate};
+            if ($pph21_op <= $bracket_tax) {
+                $net_income += $pph21_op / $bracket->{rate};
+                last;
+            } else {
+                $pph21_op -= $bracket_tax;
+                $net_income += $range;
+            }
+        } else {
+            $net_income += $pph21_op/$bracket->{rate};
+            last;
+        }
+    }
+    [200, "OK", $args{monthly} ? $net_income / 12 : $net_income];
 }
 
 1;
