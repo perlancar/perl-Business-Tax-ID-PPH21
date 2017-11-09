@@ -51,6 +51,7 @@ our %arg_pph21_op = (
         summary => 'Amount of PPh 21 op paid',
         schema => ['float*', min=>0],
         req => 1,
+        pos => 1,
     },
 );
 
