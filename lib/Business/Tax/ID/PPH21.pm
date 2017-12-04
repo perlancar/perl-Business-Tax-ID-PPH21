@@ -11,7 +11,7 @@ use Exporter::Rinci qw(import);
 
 our %SPEC;
 
-my $latest_supported_year = 2016;
+my $latest_supported_year = 2017;
 
 our %arg_tp_status = (
     tp_status => {
@@ -187,7 +187,7 @@ sub get_pph21_op_ptkp {
         };
     };
 
-    if ($year >= 2016 && $year <= 2016) { # UU PMK: 101/PMK.010/2016
+    if ($year >= 2016 && $year <= $latest_supported_year) { # UU PMK: 101/PMK.010/2016
         state $res = [200, "OK", $code_make->( 54_000_000, 4_500_000)];
         return $res;
     } elsif ($year >= 2015 && $year <= 2015) {
