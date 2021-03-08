@@ -13,7 +13,7 @@ use Exporter::Rinci qw(import);
 
 our %SPEC;
 
-my $latest_supported_year = 2019;
+my $latest_supported_year = 2020;
 
 our %arg_tp_status = (
     tp_status => {
