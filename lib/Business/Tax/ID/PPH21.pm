@@ -131,7 +131,7 @@ sub get_pph21_op_rates {
             $resmeta,
         ];
         return $res;
-    if ($year >= 2009 && $year <= 2022) {
+    } elsif ($year >= 2009 && $year <= 2022) {
         state $res = [
             200, "OK",
             [
