@@ -1,19 +1,19 @@
 package Business::Tax::ID::PPH21;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010001;
 use strict;
 use warnings;
 
 use Exporter::Rinci qw(import);
 
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our %SPEC;
 
-my $latest_supported_year = 2019;
+my $latest_supported_year = 2022;
 
 our %arg_tp_status = (
     tp_status => {
@@ -106,7 +106,7 @@ _
         %arg_year,
     },
     examples => [
-        {args=>{year=>2016}},
+        {args=>{year=>2022}},
     ],
 };
 sub get_pph21_op_rates {
@@ -118,7 +118,20 @@ sub get_pph21_op_rates {
             undef, undef, ['percent', {sprintf=>'%3.0f%%'}]
         ],
     };
-    if ($year >= 2009 && $year <= $latest_supported_year) {
+    if ($year >= 2022 && $year <= $latest_supported_year) {
+        state $res = [
+            200, "OK",
+            [
+                {                     max=>   60_000_000, rate=>0.05},
+                {xmin=>   60_000_000, max=>  250_000_000, rate=>0.15},
+                {xmin=>  250_000_000, max=>  500_000_000, rate=>0.25},
+                {xmin=>  500_000_000, max=>5_000_000_000, rate=>0.30},
+                {xmin=>5_000_000_000,                     rate=>0.35},
+            ],
+            $resmeta,
+        ];
+        return $res;
+    if ($year >= 2009 && $year <= 2022) {
         state $res = [
             200, "OK",
             [
